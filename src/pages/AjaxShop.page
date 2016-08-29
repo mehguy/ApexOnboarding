@@ -1,0 +1,27 @@
+<apex:page showHeader="false" sidebar="false">
+<apex:includeScript value="{!URLFOR($Resource.DataTables, 'media/js/jquery.js')}"/>
+<apex:includeScript value="{!URLFOR($Resource.DataTables, 'media/js/jquery.dataTables.js')}"/>
+<apex:stylesheet value="{!URLFOR($Resource.DataTables, 'media/css/jquery.dataTables.css')}"/>
+<script type="text/javascript">
+	var j$ = jQuery.noConflict();
+	j$(document).ready( function() {
+		j$('#testTable').DataTable( {
+			"bProcessing": true,
+			"bServerSide": true,
+			"sAjaxSource": '{!$Page.AjaxRespPage}?core.apexpages.devmode.url=1'
+		}	);
+	}	);
+</script>
+<apex:form>
+	<table cellpadding="0" cellspacing="0" border="0" class="display" id="testTable">
+		<thead>
+			<th>Name</th>
+			<th>Cost</th>
+			<th>Title</th>
+		</thead>
+		<tbody>
+			
+		</tbody>
+	</table>
+</apex:form>
+</apex:page>

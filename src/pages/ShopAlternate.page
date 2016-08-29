@@ -1,0 +1,315 @@
+<apex:page standardStylesheets="false" showHeader="false" sidebar="false" controller="ShopAlternateCtrl">
+<apex:includeScript value="{!URLFOR($Resource.DataTables, 'media/js/jquery.js')}"/>
+<apex:includeScript value="{!URLFOR($Resource.DataTables, 'media/js/jquery.dataTables.js')}"/>
+<apex:stylesheet value="{!URLFOR($Resource.DataTables, 'media/css/jquery.dataTables.css')}"/>
+<apex:stylesheet value="{!URLFOR($Resource.Slds, 'assets/styles/salesforce-lightning-design-system.css')}"/>
+<style>
+
+.imgProducts {
+    height: 105px;
+    width: 137px;
+}
+
+.dialogStyle {
+    display: none;
+}
+</style>
+<script>
+
+var dataTable;
+var assetsUrl = '{!URLFOR($Resource.Styles, "/")}';
+var currentRecId;
+
+function getRemoteProduct() {
+    Visualforce.remoting.Manager.invokeAction('{!$RemoteAction.ShopAlternateCtrl.getProductList}', 
+        function (result, event) {
+            if (event.status) {
+                result.forEach(function(item, i, arr) {
+                    dataTable.row.add(['<img class="imgProducts" src="'+ assetsUrl + (item.ImageURL__c?item.ImageURL__c:'images/NoImage.jpg') +'"/>', '<a onclick="buyProduct('+"'"+item.Id+"','"+''+"','details'"+')">'+item.Name__c+'</a>', item.Cost__c, item.Title__c, 
+                            '<input type="button" class="slds-button slds-button--neutral" value="{!$Label.Buy}" onclick="buyProduct('+"'"+item.Id+"','"+true+"','order'"+')">']).draw(false);
+                });
+            }
+        }
+    );
+}
+
+function buyProduct(recId, serviceContext, conType) {
+    currentRecId = recId;
+    $(this).queue(function() {
+        $('#spinnerContainer').show('fast');
+        Visualforce.remoting.Manager.invokeAction('{!$RemoteAction.ShopAlternateCtrl.getNewOrder}', recId, serviceContext,
+            function (result, event) {
+                if (result === null) {
+                    $('#responseErrors').text('The product is out of stock');
+                    switchElementVisibility('hide');
+                }
+                else if (event.result) {
+                    serviceContext?showProductDetails('order', result):showProductDetails('details', result);
+                }
+        } )
+        $(this).dequeue();
+    } )
+    .delay(1200)
+    .queue(function() {
+        $('#spinnerContainer').hide();
+        serviceContext?$('#dialogContainer').show():$('#dialogContainerDetails').show();
+        $(this).dequeue();
+    } )
+}
+
+function closeDialog() {
+    $('#dialogContainer').hide();
+    $('#dialogContainerDetails').hide();
+}
+
+function closeError() {
+    $('#notificationContainer').removeClass('slds-fade-in-open');
+}
+
+function saveOrder() {
+    var data = {    orderEmail: $('#contactEmail').val(),
+                    orderName: $('#contactName').val(),
+                    orderPhone: $('#contactPhone').val(),
+                    orderAddress: $('#contactAddress').val(),
+                    productName: $('#orderName').val()
+                }
+    if (data.orderEmail) {
+        validateEmail(data.orderEmail)?
+        Visualforce.remoting.Manager.invokeAction('{!$RemoteAction.ShopAlternateCtrl.setNewContact}', data, currentRecId,
+            function (result, event) {
+                if ($('#cbxClearFields').prop('checked') == false) {
+                    clearContactFields();
+                }
+                $('#dialogContainer').hide();
+            }
+        ):displayEmailError('Your Email address seems to be in incorrect format.');
+    }
+    else if (data.orderEmail == false) {
+        displayEmailError('Please, enter your Email.');
+    } 
+}
+
+function switchElementVisibility(btnKey) {
+    var elems = '#contactInputs, #saveBtn, #yourDataHeader, #youAreOrdering';
+    if (btnKey == 'hide') {
+        $(elems).hide();
+    }
+    if (btnKey == 'show') {
+        $(elems).show(); 
+    }
+}
+
+function clearContactFields() {
+    $('#contactEmail').val('');
+    $('#contactName').val('');
+    $('#contactPhone').val('');
+    $('#contactAddress').val('');
+}
+
+function validateEmail(email) {
+    var eVal = /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/;
+    return eVal.test(email);
+}
+
+function showProductDetails(conType, result) {
+    if (conType === 'order') {
+        switchElementVisibility('show');
+        $('#responseErrors').text('');
+        $('#orderName').val(result.Name__c);
+        $('#orderCost').val(result.Cost__c);
+        $('#orderTitle').val(result.Title__c);
+    }
+    else if (conType === 'details') {
+        $('#detailsHeader').text(result.Name__c);
+        $('#detailsName').text(result.Name__c);
+        $('#detailsCost').text(result.Cost__c);
+        $('#detailsTitle').text(result.Title__c);
+        $('#detailsDescription').text(decodeHtml(result.Description__c));
+        $('#detailsImage').prop('src', ""+ assetsUrl + (result.ImageURL__c?result.ImageURL__c:'images/NoImage.jpg') +"");
+    }
+}
+
+function displayEmailError(message) {
+    $('#notificationContainer').addClass('slds-fade-in-open');
+    $('#errorMessage').val(message);
+}
+
+function decodeHtml(toDecode) {
+    var txt = document.createElement("textarea");
+    txt.innerHTML = toDecode;
+    return txt.value;
+}
+
+$(document).ready(function() {
+    console.log(assetsUrl);
+    dataTable = $('#mainTable').DataTable( {
+        "order": [[1, "asc"]]
+    } );
+    getRemoteProduct();
+} );
+
+</script>
+<article class="slds-card">
+  <header class="slds-card__header slds-grid">
+    <div class="slds-media slds-media--center slds-has-flexi-truncate">
+      <div class="slds-media__figure">
+        <svg aria-hidden="true" class="slds-icon slds-icon-custom-custom1 slds-icon--medium" 
+            xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+            <use xlink:href="{!URLFOR($Resource.Slds, 'assets/icons/custom-sprite/svg/symbols.svg#custom1')}"/>
+        </svg>
+      </div>
+      <div class="slds-media__body slds-truncate">
+        <h2>
+            <span class="slds-text-heading--large">Kitties</span>
+        </h2>
+      </div>
+    </div>
+  </header>
+  <div class="slds-card__body">
+    <table id="mainTable" class="slds-table slds-table--bordered slds-no-row-hover slds-table--cell-buffer">
+      <thead>
+        <tr class="slds-text-heading--label">
+          <th>
+            <div class="slds-truncate" title="Image">Image</div>
+          </th>
+          <th>
+            <div class="slds-truncate" title="Name">Name</div>
+          </th>
+          <th>
+            <div class="slds-truncate" title="Cost">Cost</div>
+          </th>
+          <th>
+            <div class="slds-truncate" title="Title">Title</div>
+          </th>
+          <th>
+            <div class="slds-truncate" title="Buy"></div>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+      </tbody>
+    </table>
+  </div>
+</article>
+<!--Product ordering dialog-->
+<div id="dialogContainer" class="dialogStyle">
+<div role="dialog" tabindex="-1" aria-labelledby="header43" class="slds-modal slds-fade-in-open">
+  <div class="slds-modal__container">
+    <div class="slds-modal__header">
+      <button onclick="closeDialog()" class="slds-button slds-button--icon-inverse slds-modal__close">
+        <svg aria-hidden="true" class="slds-button__icon slds-button__icon--large" 
+            xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+          <use xlink:href="{!URLFOR($Resource.Slds, 'assets/icons/action-sprite/svg/symbols.svg#close')}"/>
+        </svg>
+        <span class="slds-assistive-text">Close</span>
+      </button>
+      <h2 id="header43" class="slds-text-heading--medium">Order a product</h2>
+    </div>
+    <div class="slds-modal__content slds-p-around--medium">
+      <div id="youAreOrdering">
+        You're ordering <b><output type="text" id="orderName"/>, <output type="text" id="orderTitle"/></b> for <b>
+        <output type="text" id="orderCost"/>$</b>.<br/>
+      </div>
+      <div>
+        <h1 id="responseErrors"/><br/>
+        <div id="contactInputs">
+            <h2 id="yourDataHeader">Enter you contact data:</h2>
+            <p>Name</p><input type="text" id="contactName"/>
+            <p>Phone</p><input type="text" id="contactPhone"/>
+            <p>Email</p><input type="text" id="contactEmail"/>
+            <p>Address</p><input type="text" id="contactAddress"/><br/>
+            <input type="checkbox" id="cbxClearFields"> Do not clear contact fields</input>
+        </div>
+      </div>
+    </div>
+    <div class="slds-modal__footer">
+      <button onclick="closeDialog()" class="slds-button slds-button--neutral">Cancel</button>
+      <button id="saveBtn" onclick="saveOrder()" class="slds-button slds-button--neutral slds-button--brand">Save</button>
+    </div>
+  </div>
+</div>
+<div class="slds-backdrop slds-backdrop--open"></div>
+</div>
+<!--Product details dialog-->
+<div id="dialogContainerDetails" class="dialogStyle">
+<div role="dialog" tabindex="-1" aria-labelledby="header43" class="slds-modal slds-fade-in-open">
+  <div class="slds-modal__container">
+    <div class="slds-modal__header">
+      <button onclick="closeDialog()" class="slds-button slds-button--icon-inverse slds-modal__close">
+        <svg aria-hidden="true" class="slds-button__icon slds-button__icon--large" 
+            xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+          <use xlink:href="{!URLFOR($Resource.Slds, 'assets/icons/action-sprite/svg/symbols.svg#close')}"/>
+        </svg>
+        <span class="slds-assistive-text">Close</span>
+      </button>
+      <h2 id="detailsHeader" class="slds-text-heading--medium"/>
+    </div>
+    <div class="slds-modal__content slds-p-around--medium">
+        <div class="slds-tile slds-media">
+          <div class="slds-media__figure">
+            <svg aria-hidden="true" class="slds-icon slds-icon-standard-groups" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+              <use xlink:href="{!URLFOR($Resource.Slds, '/assets/icons/standard-sprite/svg/symbols.svg#flow')}"></use>
+            </svg>
+          </div>
+          <div class="slds-media__body">
+            <h3 class="slds-truncate" title="Product details">Product details</h3>
+            <div class="slds-tile__detail slds-text-body--small">
+              <dl class="slds-dl--horizontal">
+                <dt class="slds-dl--horizontal__label">
+                  <p class="slds-truncate" title="Email">Title:</p>
+                </dt>
+                <dd class="slds-dl--horizontal__detail slds-tile__meta">
+                  <p id="detailsTitle" class="slds-truncate" title="Title"/>
+                </dd>
+                <dt class="slds-dl--horizontal__label">
+                  <p class="slds-truncate" title="Email">Cost:</p>
+                </dt>
+                <dd class="slds-dl--horizontal__detail slds-tile__meta">
+                  <p id="detailsCost" class="slds-truncate" title="Cost"/>
+                </dd>
+                <dt class="slds-dl--horizontal__label">
+                  <p class="slds-truncate" title="Email">Description:</p>
+                </dt>
+                <dd class="slds-dl--horizontal__detail slds-tile__meta">
+                  <p id="detailsDescription" title="Description"/>
+                </dd>
+                <img align="center" id="detailsImage" class="imgProducts"/>
+              </dl>
+            </div>
+          </div>
+        </div>
+    </div>
+    <div class="slds-modal__footer">
+      <button onclick="closeDialog()" class="slds-button slds-button--neutral">Back</button>
+    </div>
+  </div>
+</div>
+<div class="slds-backdrop slds-backdrop--open"></div>
+</div>
+<!--Waiting spinner-->
+<div id="spinnerContainer" class="dialogStyle">
+<div class="slds-spinner_container">
+  <div class="slds-spinner slds-spinner--large" aria-hidden="false" role="alert">
+    <div class="slds-spinner__dot-a"></div>
+    <div class="slds-spinner__dot-b"></div>
+  </div>
+  <div class="slds-backdrop slds-backdrop--open"></div>
+</div>
+</div>
+<!--Error notification dialog-->
+<div id="notificationContainer" aria-hidden="false" aria-labelledby="prompt-heading-id" aria-describedby="prompt-message-wrapper" role="alertdialog" class="slds-modal slds-modal--prompt">
+    <div class="slds-modal__container slds-modal--prompt" role="document" id="prompt-message-wrapper" tabindex="0">
+        <div class="slds-modal__header slds-theme--error slds-theme--alert-texture">
+            <h2 class="slds-text-heading--medium" id="prompt-heading-id">Validation error</h2>
+        </div>
+        <div class="slds-modal__content slds-p-around--medium">
+            <div align="center">
+                <output id="errorMessage"/>
+            </div>
+        </div>
+        <div class="slds-modal__footer slds-theme--default">
+            <button onclick="closeError()" class="slds-button slds-button--neutral">Okay</button>
+        </div>
+    </div>
+</div>
+</apex:page>

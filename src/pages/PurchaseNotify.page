@@ -1,0 +1,59 @@
+<apex:page controller="PurchaseNotifyCtrl" showHeader="false" sidebar="false">
+<apex:composition template="SiteTemplate">
+<apex:define name="body">
+<apex:form>
+	<apex:pageBlock mode="detail" title="{!$Label.YourOrder}">
+		<apex:pageBlockSection title="{!$Label.ProductData}" columns="1">
+			<apex:pageBlockSectionItem>
+				<apex:outputLabel value="{!$Label.Name}"/>
+				<apex:outputText value="{!orderedProduct.Name__c}"/>
+			</apex:pageBlockSectionItem>
+			<apex:pageBlockSectionItem>
+				<apex:outputLabel value="{!$Label.DefaultCost}"/>
+				<apex:outputField value="{!defaultProduct.Cost__c}"/>
+			</apex:pageBlockSectionItem>
+			<apex:pageBlockSectionItem>
+				<apex:outputLabel value="{!$Label.DiscountedCost}"/>
+				<apex:outputField value="{!orderedProduct.Cost__c}"/>
+			</apex:pageBlockSectionItem>
+			<apex:pageBlockSectionItem rendered="{!promoData != null}">
+				<apex:outputLabel value="{!$Label.DiscountPercent}"/>
+				<apex:outputField value="{!promoData.PercentsOfDiscount__c}"/>
+			</apex:pageBlockSectionItem>
+			<apex:pageBlockSectionItem rendered="{!promoData != null}">
+				<apex:outputLabel value="{!$Label.DiscountAmount}"/>
+				<apex:outputText value="{!promoData.StaticDiscount__c}"/>
+			</apex:pageBlockSectionItem>
+			<apex:pageBlockSectionItem rendered="{!promoData == null}">
+				<apex:outputLabel value="{!$Label.NoDiscount}"/>
+			</apex:pageBlockSectionItem>
+			<apex:pageBlockSectionItem>
+				<apex:image value="{!if(isblank(orderedProduct.ImageURL__c),
+            					URLFOR($Resource.Styles, '/images/NoImage.jpg'),
+            					URLFOR($Resource.Styles, orderedProduct.ImageURL__c))}" width="235" height="175" styleClass="img-shadow"/>
+			</apex:pageBlockSectionItem>
+		</apex:pageBlockSection>
+		<apex:pageBlockSection title="{!$Label.YourData}" columns="1">
+			<apex:pageBlockSectionItem>
+				<apex:outputLabel value="{!$Label.Name}"/>
+				<apex:outputText value="{!customerContact.Name}"/>
+			</apex:pageBlockSectionItem>
+			<apex:pageBlockSectionItem>
+				<apex:outputLabel value="{!$Label.Email}"/>
+				<apex:outputText value="{!customerContact.Email__c}"/>
+			</apex:pageBlockSectionItem>
+			<apex:pageBlockSectionItem>
+				<apex:outputLabel value="{!$Label.Phone}"/>
+				<apex:outputText value="{!customerContact.Phone__c}"/>
+			</apex:pageBlockSectionItem>
+			<apex:pageBlockSectionItem>
+				<apex:outputLabel value="{!$Label.Address}"/>
+				<apex:outputText value="{!customerContact.Address__c}"/>
+			</apex:pageBlockSectionItem>
+		</apex:pageBlockSection>
+			<apex:commandButton value="{!$Label.ContShopping}" action="{!back}" styleClass="btnm" immediate="true"/>
+	</apex:pageBlock>
+</apex:form>
+</apex:define>
+</apex:composition>
+</apex:page>

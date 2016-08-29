@@ -1,0 +1,39 @@
+<apex:page controller="ProductDetailsCtrl" showHeader="false" sidebar="false">
+<apex:stylesheet value="{!URLFOR($Resource.Styles, 'css/shop_styles.css')}"/>
+<apex:form >
+	<apex:pageBlock title="{!$Label.ProductDetails}">
+		<table width="100%">
+			<tr >
+				<td width="100%">
+				<apex:pageBlockSection columns="1">
+					<apex:pageBlockSectionItem >
+						<apex:commandButton value="{!$Label.Back}" action="{!back}" styleClass="btnm" immediate="true"/>
+					</apex:pageBlockSectionItem>
+					<apex:pageBlockSectionItem >
+						<apex:outputLabel value="{!$Label.Name}"/>
+						<apex:outputText value="{!selectedProduct.Name__c}"/>
+					</apex:pageBlockSectionItem>
+					<apex:pageBlockSectionItem >
+						<apex:outputLabel value="{!$Label.Amount}"/>
+						<apex:outputText value="{!selectedProduct.Amount__c}"/>
+					</apex:pageBlockSectionItem>
+					<apex:pageBlockSectionItem >
+						<apex:outputLabel value="{!$Label.Cost}"/>
+						<apex:outputText value="{!selectedProduct.Cost__c}"/>
+					</apex:pageBlockSectionItem>
+					<apex:pageBlockSectionItem >
+						<apex:outputLabel value="{!$Label.Description}"/>
+						<apex:outputText value="{!selectedProduct.Description__c}"/>
+					</apex:pageBlockSectionItem>
+				</apex:pageBlockSection>
+				</td>
+				<td>
+					<apex:image value="{!if(isblank(selectedProduct.ImageURL__c),
+            					URLFOR($Resource.Styles, '/images/NoImage.jpg'),
+            					URLFOR($Resource.Styles, selectedProduct.ImageURL__c))}" width="470" height="350" styleClass="img-shadow"/>
+				</td>
+			</tr>
+		</table>
+	</apex:pageBlock>
+</apex:form>
+</apex:page>

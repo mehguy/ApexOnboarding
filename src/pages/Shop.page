@@ -1,0 +1,101 @@
+<apex:page standardStylesheets="false" controller="ShopCtrl" showHeader="false" sidebar="false" >
+<style>
+.table td {
+	vertical-align: middle !important;
+}
+.page_input {
+	size: 2 !important;
+}
+</style>
+<script type="text/javascript">
+	function getRemoteProduct() {
+		var productName = document.getElementById('inputSearch').value;
+		Visualforce.remoting.Manager.invokeAction('{!$RemoteAction.ShopCtrl.getProduct}', productName, 
+				function (result, event) {
+					if (event.status) {
+						searchRefresh();
+					}/*
+                 	else if (event.type == 'exception') {
+                    	document.getElementById("responseErrors").innerHTML =
+                        	event.message + "<br/>\n<pre>" + event.where + "</pre>";
+                	} else {
+                    	document.getElementById("responseErrors").innerHTML = event.message;
+                	}*/
+				}
+			);
+	}
+</script>
+<apex:composition template="SiteTemplate">
+	<apex:define name="body">
+	<apex:form>
+	<c:Loading/>
+	<input type="text" id="inputSearch"/>
+	<apex:actionFunction name="searchRefresh" reRender="table"/>
+	<apex:actionFunction name="select" reRender="table" action="{!refreshTable}" immediate="true">
+		<apex:param assignTo="{!recordsAtTime}" name="amountSelecter" value="Object"/>
+	</apex:actionFunction>
+	<apex:actionFunction name="setPage" reRender="table, error" action="{!moveToPage}" immediate="true">
+		<apex:param assignTo="{!pageNumber}" name="pageSelecter" value="Object"/>
+	</apex:actionFunction>
+	<apex:pageBlock mode="detail" title="{!$Label.Products}">
+		<div class="well">
+		<apex:pageBlockSection columns="2">
+			<apex:pageBlockSectionItem id="firstItem">
+				<apex:outputLabel value="{!$Label.SearchProduct}"/>
+				<apex:inputText id="searchFieldTwo"/>
+			</apex:pageBlockSectionItem>
+			<apex:pageBlockSectionItem>
+				<apex:commandButton styleClass="btnm" value="{!$Label.Go}" onclick="getRemoteProduct()"/>
+			</apex:pageBlockSectionItem>
+		</apex:pageBlockSection>
+		</div>
+		<apex:pageBlockTable id="table" styleClass="table table-striped table-hover" value="{!products}" var="product" 
+			 first="{!firstRecord}" rows="{!recordsAtTime}">
+			<apex:column headerValue="{!$Label.Name}">
+			    <apex:commandLink value="{!product.Name__c}" action="{!productDetails}" immediate="true">
+            		<apex:param value="{!product.Id}" name="recordId" assignTo="{!recordId}" />
+          		</apex:commandLink>
+			</apex:column>
+			<apex:column>
+					<apex:commandLink action="{!productDetails}" immediate="true">
+            		<apex:param value="{!product.Id}" name="recordId" assignTo="{!recordId}"/>
+            		<apex:image styleClass="img" value="{!if(isblank(product.ImageURL__c),
+            					URLFOR($Resource.Styles, '/images/NoImage.jpg'),
+            					URLFOR($Resource.Styles, product.ImageURL__c))}" width="137" height="105"/>
+          		</apex:commandLink>
+			</apex:column>
+			<apex:column headerValue="{!$Label.Title}">
+				<apex:outputField value="{!product.Title__c}"/>
+			</apex:column>
+			<apex:column headerValue="{!$Label.Description}">
+				<apex:outputText value="{!if(LEN(product.Description__c) > 100, LEFT(product.Description__c, 100)+'...', product.Description__c)}"/>
+			</apex:column>
+			<apex:column headerValue="{!$Label.Cost}">
+				<apex:outputField value="{!product.Cost__c}"/>
+			</apex:column>
+			<apex:column >
+				<apex:commandLink styleClass="btn btn-info" value="{!$Label.Buy}" action="{!newOrder}" immediate="true">
+					<apex:param value="{!product.Id}" name="recordId" assignTo="{!recordId}"/>
+				</apex:commandLink>
+			</apex:column>
+		</apex:pageBlockTable>
+		<div class="well">
+		<apex:panelGroup>
+			<apex:selectList size="1" onchange="select(this.value)">
+				<apex:outputLabel value="{!$Label.RecordsToDisplay}"/>
+				<apex:selectOptions value="{!selectOptions}"/>
+			</apex:selectList>
+			<apex:commandButton styleClass="btnm" value="{!$Label.PreviousPage}" action="{!previousPage}" reRender="table" immediate="true"/>
+			<apex:commandButton styleClass="btnm" value="{!$Label.NextPage}" action="{!nextPage}" reRender="table" immediate="true"/>
+			<apex:outputLabel value="{!$Label.GoToPage}"/>
+			<apex:inputText styleClass="form-control, page_input" size="2" value="{!pageNumber}" onchange="setPage(this.value)"/>
+			<apex:outputText value="{!errorMessage}" id="error" styleClass="errorM"/>
+			<apex:outputLabel value="{!$Label.Pages}"/>
+			<apex:outputText value="{!pageCalc}"/>
+		</apex:panelGroup>
+		</div>
+	</apex:pageBlock>
+	</apex:form>
+	</apex:define>
+</apex:composition>
+</apex:page>

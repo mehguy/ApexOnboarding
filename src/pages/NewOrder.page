@@ -1,0 +1,66 @@
+<apex:page controller="NewOrderCtrl" showHeader="false" sidebar="false">
+<apex:stylesheet value="{!URLFOR($Resource.Styles, 'css/shop_styles.css')}"/>
+<apex:form >
+	<apex:pageMessages id="error"/>
+	<apex:pageBlock >
+	<table width="100%">
+		<tr>
+			<td>
+				<apex:pageBlockSection columns="1">
+					<div align="center">
+					<apex:pageBlockSectionItem >
+							<apex:commandButton value="{!$Label.Back}" action="{!back}" styleClass="btnm" immediate="true"/>
+					</apex:pageBlockSectionItem>
+					</div>
+					<apex:pageBlockSectionItem >
+						<apex:outputLabel value="{!$Label.Name}"/>
+						<apex:inputField value="{!newContact.Name}" required="true"/>
+					</apex:pageBlockSectionItem>
+					<apex:pageBlockSectionItem >
+						<apex:outputLabel value="{!$Label.Email}"/>
+						<apex:inputField value="{!newContact.Email__c}" required="true"/>
+					</apex:pageBlockSectionItem>
+					<apex:pageBlockSectionItem >
+						<apex:outputLabel value="{!$Label.Phone}"/>
+						<apex:inputField value="{!newContact.Phone__c}" required="true"/>
+					</apex:pageBlockSectionItem>
+					<apex:pageBlockSectionItem >
+						<apex:outputLabel value="{!$Label.Address}"/>
+						<apex:inputField value="{!newContact.Address__c}" required="true"/>
+					</apex:pageBlockSectionItem>
+					<br/>
+					<apex:pageBlockSectionItem >
+						<apex:outputLabel value="{!$Label.PromoCode}"/>
+						<apex:inputText value="{!currentPromo}"/> 
+					</apex:pageBlockSectionItem>
+					<apex:pageBlockSectionItem >
+						<apex:commandButton value="{!$Label.Buy}" action="{!save}" reRender="error" styleClass="btnm"/>
+					</apex:pageBlockSectionItem>
+				</apex:pageBlockSection>
+			</td>
+			<td align="center">
+				<apex:image value="{!if(isblank(selectedProduct.ImageURL__c),
+            					URLFOR($Resource.Styles, '/images/NoImage.jpg'),
+            					URLFOR($Resource.Styles, selectedProduct.ImageURL__c))}" styleClass="img-shadow"/>
+			</td>
+			<td>
+				<apex:pageBlockSection columns="1">
+					<apex:pageBlockSectionItem >
+						<apex:outputLabel value="{!$Label.Name}"/>
+						<apex:outputField value="{!selectedProduct.Name__c}"/>
+					</apex:pageBlockSectionItem>
+						<apex:pageBlockSectionItem >
+						<apex:outputLabel value="{!$Label.Description}"/>
+						<apex:outputField value="{!selectedProduct.Description__c}"/>
+					</apex:pageBlockSectionItem>
+						<apex:pageBlockSectionItem >
+						<apex:outputLabel value="{!$Label.Cost}"/>
+						<apex:outputField value="{!selectedProduct.Cost__c}"/>
+					</apex:pageBlockSectionItem>			
+				</apex:pageBlockSection>
+			</td>
+		</tr>
+	</table>
+	</apex:pageBlock>
+</apex:form>
+</apex:page>

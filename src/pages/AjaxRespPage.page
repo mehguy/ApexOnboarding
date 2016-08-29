@@ -1,0 +1,4 @@
+<apex:page controller="AjaxRespCtrl" sidebar="false" showHeader="false" standardStylesheets="false"
+	action="{!retrieveData}" contentType="application/x-JavaScript; charset=utf-8">
+	{!jsonString}	
+</apex:page>

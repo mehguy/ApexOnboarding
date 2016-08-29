@@ -1,0 +1,13 @@
+<!--Adds loading animation.-->
+<apex:component >
+<apex:stylesheet value="{!URLFOR($Resource.Styles, '/css/shop_styles.css')}" />
+	<apex:actionstatus id="loadStatus" onstop="updatePage()">
+		<apex:facet name="start">
+			<div class="waitingSearchDiv" id="el_loading">
+				<div class="loading-text waitingHolder">
+					<img class="waitingImage" src="/img/loading.gif"/>
+				</div>
+			</div>
+		</apex:facet>
+	</apex:actionstatus>
+</apex:component>
